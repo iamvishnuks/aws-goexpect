@@ -16,34 +16,39 @@ const (
 )
 
 var (
-	addr = flag.String("address", "", "address of telnet server")
-	user = flag.String("user", "", "username to use")
-	pass = flag.String("pass", "", "password to use")
-	cmd  = flag.String("cmd", "", "command to run")
+	accesskeyid = flag.String("accessid", "ddfd", "address of telnet server")
+	secret = flag.String("accesskey", "fdfd", "username to use")
+	profile = flag.String("profile", "", "password to use")
+	region = flag.String("region","ff-ff-f","region for the cluster")
+	output = flag.String("output","json","output format")
 
-	userRE   = regexp.MustCompile("username:")
-	passRE   = regexp.MustCompile("password:")
+	accesskeyidRE   = regexp.MustCompile("AWS Access Key ID:")
+	secretRE   = regexp.MustCompile("AWS Secret Access Key:")
+	regionRE = regexp.MustCompile("Default region name:")
+	outputRE = regexp.MustCompile("Default output format:")
 	promptRE = regexp.MustCompile("%")
 )
 
 func main() {
 	flag.Parse()
-	fmt.Println(term.Bluef("Telnet 1 example"))
+	fmt.Println(term.Bluef("AWS CLI configure"))
 
-	e, _, err := expect.Spawn(fmt.Sprintf("telnet %s", *addr), -1)
+	e, _, err := expect.Spawn(fmt.Sprintf("aws configure --profile", *profile), -1)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer e.Close()
 
-	e.Expect(userRE, timeout)
-	e.Send(*user + "\n")
-	e.Expect(passRE, timeout)
-	e.Send(*pass + "\n")
-	e.Expect(promptRE, timeout)
-	e.Send(*cmd + "\n")
+	e.Expect(accesskeyidRE, timeout)
+	e.Send(*accesskeyid + "\n")
+	e.Expect(secretRE, timeout)
+	e.Send(*secret + "\n")
+	e.Expect(regionRE, timeout)
+	e.Send(*region + "\n")
+	e.Expect(outputRE, timeout)
+	e.Send(*output + "\n")
 	result, _, _ := e.Expect(promptRE, timeout)
 	e.Send("exit\n")
 
-	fmt.Println(term.Greenf("%s: result: %s\n", *cmd, result))
+	fmt.Println(term.Greenf("result: %s\n", result))
 }
